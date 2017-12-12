@@ -1,0 +1,8 @@
+{
+    "input_directory": "./public/templates/pitch/_*.dust",
+    "output_directory": "./public/templates/pitch/",
+    "properties": {
+        "source_language": "./locales/US/en/",
+        "destination_language": "./locales/CY/el/"
+    }
+}
