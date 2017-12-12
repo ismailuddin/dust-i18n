@@ -53,12 +53,21 @@ class TagHandler:
             return tag
         
     def insertPhraseTag(self, string, translated_string):
+        """
+        Generate a unique tag ID for provided text and translated text,
+        which will also be stored in the language tag dictionary,
+        for export into .properties file.
+        """
         tag = self.randUniqueTag()
         self.langTags_source[tag] = string 
         self.langTags_dest[tag] = translated_string
         return tag
 
     def generatePropertiesFile(self):
+        """
+        Generate .properties file from the language tags dictionary
+        for both the source and destionation languages.
+        """
         with codecs.open(self.source_lang_filepath, 'w', 'utf-8-sig') as file:
             for key, value in self.langTags_source.items():
                 line = key + "=" + value + "\n"
@@ -87,7 +96,7 @@ class Dust:
         self.translator = translate.Client()
         self.tagHandler = TagHandler(path['properties'], self.filename.split('.')[0], self.dirpath)
         self.translateStrings()
-        self.outputHTML()
+        self.outputDust()
         self.tagHandler.generatePropertiesFile()
 
     def authenticateGoogleCloudTranslateAPI(self):
@@ -95,6 +104,9 @@ class Dust:
         buckets = list(storage_client.list_buckets())
 
     def parseDust(self, filename):
+        """
+        Parse the input .dust file
+        """
         with open(filename, encoding='utf-8') as file:
             for line in file:
                 if "{@useContent" in line:
@@ -107,12 +119,19 @@ class Dust:
         self.file_lines = self.raw.split("\n")
 
     def isBlank(self, string):
+        """
+        Confirm whether the input string is indeed blank and 
+        contains only whitespace.
+        """
         if string and string.strip():
             return True
         else:
             return False
 
     def translateStrings(self):
+        """
+        Translate all text strings in the parsed .dust file
+        """
         script = False
         for i, line in enumerate(tqdm(self.file_lines)):
             # Only matches text enclosed within a pair of HTML tags e.g. <div>Text</div>
@@ -156,7 +175,10 @@ class Dust:
                 script = False
                 
 
-    def outputHTML(self):
+    def outputDust(self):
+        """
+        Output the processed .dust file
+        """
         with open(self.output_path + self.filename, 'w') as file:
             file.write("{@useContent bundle=\"" + self.output_path.split('/')[-2] + "/" + self.filename.split('.')[0] + ".properties" + "\"} \n")
             for line in self.file_lines:
@@ -170,18 +192,19 @@ class FileHandler:
         self.input_files = self.loadFiles()
         self.processFiles(self.input_files, language, Config.config)
 
-
-    def parseFileList(self):
-        for entry in Config.config['input_files']:
-            self.input_files.append(entry)
-
     def loadFiles(self):
+        """
+        Load all the files from the input directory
+        """
         files = glob.glob(Config.config['input_directory'])
         for i, file in enumerate(files):
             files[i] = file.replace("\\", '/')
         return files
 
     def processFiles(self, file_list, language, path):
+        """
+        Process each of the files loaded using the Dust class.
+        """
         for filepath in tqdm(file_list):
             print(filepath)
             _filename = os.path.basename(filepath)
